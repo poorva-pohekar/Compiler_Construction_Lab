@@ -1,85 +1,23 @@
 %{
-#include <stdio.h>
+#include "y.tab.h"
 #include <stdlib.h>
 #include <string.h>
-
-int yylex();
-void yyerror(const char *s);
-
-int tempCount = 0;
-
-char* newTemp() {
-    char *temp = malloc(10);
-    sprintf(temp, "t%d", tempCount++);
-    return temp;
-}
 %}
 
-%union {
-    char *sval;
-}
-
-%token <sval> ID NUM
-%token ASSIGN PLUS MINUS MUL DIV LPAREN RPAREN
-%type <sval> expr
-
+%%
+[a-zA-Z][a-zA-Z0-9]*    { yylval.sval = strdup(yytext); return ID; }
+[0-9]+                  { yylval.sval = strdup(yytext); return NUM; }
+"="                     { return ASSIGN; }
+"+"                     { return PLUS; }
+"-"                     { return MINUS; }
+"*"                     { return MUL; }
+"/"                     { return DIV; }
+"("                     { return LPAREN; }
+")"                     { return RPAREN; }
+[ \t\n]                 ;   /* ignore whitespace */
+.                       { return yytext[0]; }
 %%
 
-stmt : ID ASSIGN expr
-      {
-          printf("%s = %s\n", $1, $3);
-      }
-     ;
+int yywrap() { return 1; }
 
-expr : expr PLUS expr
-      {
-          char *t = newTemp();
-          printf("%s = %s + %s\n", t, $1, $3);
-          $$ = t;
-      }
-     | expr MINUS expr
-      {
-          char *t = newTemp();
-          printf("%s = %s - %s\n", t, $1, $3);
-          $$ = t;
-      }
-     | expr MUL expr
-      {
-          char *t = newTemp();
-          printf("%s = %s * %s\n", t, $1, $3);
-          $$ = t;
-      }
-     | expr DIV expr
-      {
-          char *t = newTemp();
-          printf("%s = %s / %s\n", t, $1, $3);
-          $$ = t;
-      }
-     | LPAREN expr RPAREN
-      {
-          $$ = $2;
-      }
-     | ID
-      {
-          $$ = $1;
-      }
-     | NUM
-      {
-          $$ = $1;
-      }
-     ;
 
-%%
-
-void yyerror(const char *s)
-{
-    fprintf(stderr, "Error: %s\n", s);
-}
-
-int main()
-{
-    printf("Enter an arithmetic expression:\n");
-    yyparse();
-    return 0;
-}
-//.y code
